@@ -1,0 +1,555 @@
+import React from 'react'
+import { useParams } from "react-router-dom"
+import TopPart from '../components/chart_view_components/TopPart'
+import LeftSidebar from '../components/chart_view_components/LeftSidebar'
+import Chart from '../components/chart_view_components/Chart'
+import RightSidebar from '../components/chart_view_components/RightSidebar'
+
+const ChartView = () => {
+    const {datasetId} = useParams()
+
+    console.log(datasetId)
+    const candles=[
+
+{
+time:"09:15",
+open:100,
+high:110,
+low:95,
+close:108
+},
+
+{
+time:"09:20",
+open:108,
+high:120,
+low:105,
+close:115
+},
+
+{
+time:"09:30",
+open:115,
+high:118,
+low:100,
+close:102
+},
+{
+time:"09:35",
+open:115,
+high:118,
+low:100,
+close:102
+},
+  {
+  time:"09:40",
+  open:115,
+  high:118,
+  low:100,
+  close:102
+  },
+  {
+  time:"09:45",
+  open:114,
+  high:120,
+  low:111,
+  close:102
+  },{
+    time:"09:50",
+    open:102,
+    high:109,
+    low:98,
+    close:106
+  },
+  {
+    time:"09:55",
+    open:106,
+    high:112,
+    low:103,
+    close:110
+  },
+  {
+    time:"10:00",
+    open:110,
+    high:116,
+    low:108,
+    close:113
+  },
+  {
+    time:"10:05",
+    open:113,
+    high:119,
+    low:109,
+    close:111
+  },
+  {
+    time:"10:10",
+    open:111,
+    high:115,
+    low:105,
+    close:107
+  },
+  {
+    time:"10:15",
+    open:107,
+    high:113,
+    low:104,
+    close:112
+  },
+  {
+    time:"10:20",
+    open:112,
+    high:121,
+    low:110,
+    close:118
+  },
+  {
+    time:"10:25",
+    open:118,
+    high:124,
+    low:115,
+    close:120
+  },
+  {
+    time:"10:30",
+    open:120,
+    high:126,
+    low:117,
+    close:123
+  },
+  {
+    time:"10:35",
+    open:123,
+    high:128,
+    low:119,
+    close:121
+  },{
+    time:"10:40",
+    open:121,
+    high:125,
+    low:116,
+    close:118
+  },
+  {
+    time:"10:45",
+    open:118,
+    high:122,
+    low:113,
+    close:115
+  },
+  {
+    time:"10:50",
+    open:115,
+    high:119,
+    low:108,
+    close:110
+  },
+  {
+    time:"10:55",
+    open:110,
+    high:114,
+    low:105,
+    close:108
+  },
+  {
+    time:"11:00",
+    open:108,
+    high:116,
+    low:106,
+    close:114
+  },
+  {
+    time:"11:05",
+    open:114,
+    high:120,
+    low:112,
+    close:118
+  },
+  {
+    time:"11:10",
+    open:118,
+    high:123,
+    low:115,
+    close:121
+  },
+  {
+    time:"11:15",
+    open:121,
+    high:127,
+    low:118,
+    close:125
+  },
+  {
+    time:"11:20",
+    open:125,
+    high:130,
+    low:120,
+    close:122
+  },
+  {
+    time:"11:25",
+    open:122,
+    high:126,
+    low:117,
+    close:119
+  },
+  {
+    time:"11:30",
+    open:119,
+    high:124,
+    low:114,
+    close:116
+  },
+  {
+    time:"11:35",
+    open:116,
+    high:121,
+    low:111,
+    close:120
+  },
+  {
+    time:"11:40",
+    open:120,
+    high:128,
+    low:118,
+    close:126
+  },
+  {
+    time:"11:45",
+    open:126,
+    high:132,
+    low:123,
+    close:129
+  },
+  {
+    time:"11:50",
+    open:129,
+    high:134,
+    low:125,
+    close:127
+  },
+  {
+    time:"11:55",
+    open:127,
+    high:131,
+    low:121,
+    close:124
+  },
+  {
+    time:"12:00",
+    open:124,
+    high:129,
+    low:119,
+    close:121
+  },
+  {
+    time:"12:05",
+    open:121,
+    high:126,
+    low:116,
+    close:125
+  },
+  {
+    time:"12:10",
+    open:125,
+    high:133,
+    low:123,
+    close:131
+  },
+  {
+    time:"12:15",
+    open:131,
+    high:137,
+    low:128,
+    close:134
+  },{
+    time:"12:20",
+    open:134,
+    high:139,
+    low:130,
+    close:136
+  },
+  {
+    time:"12:25",
+    open:136,
+    high:142,
+    low:132,
+    close:140
+  },
+  {
+    time:"12:30",
+    open:140,
+    high:145,
+    low:137,
+    close:138
+  },
+  {
+    time:"12:35",
+    open:138,
+    high:143,
+    low:134,
+    close:141
+  },
+  {
+    time:"12:40",
+    open:141,
+    high:148,
+    low:139,
+    close:146
+  },
+  {
+    time:"12:45",
+    open:146,
+    high:151,
+    low:143,
+    close:149
+  },
+  {
+    time:"12:50",
+    open:149,
+    high:154,
+    low:145,
+    close:147
+  },
+  {
+    time:"12:55",
+    open:147,
+    high:150,
+    low:140,
+    close:143
+  },
+  {
+    time:"13:00",
+    open:143,
+    high:147,
+    low:136,
+    close:139
+  },
+  {
+    time:"13:05",
+    open:139,
+    high:144,
+    low:133,
+    close:136
+  },
+  {
+    time:"13:10",
+    open:136,
+    high:141,
+    low:131,
+    close:138
+  },
+  {
+    time:"13:15",
+    open:138,
+    high:146,
+    low:137,
+    close:144
+  },
+  {
+    time:"13:20",
+    open:144,
+    high:150,
+    low:141,
+    close:148
+  },
+  {
+    time:"13:25",
+    open:148,
+    high:153,
+    low:145,
+    close:151
+  },
+  {
+    time:"13:30",
+    open:151,
+    high:156,
+    low:148,
+    close:154
+  },
+  {
+    time:"13:35",
+    open:154,
+    high:158,
+    low:150,
+    close:152
+  },
+  {
+    time:"13:40",
+    open:152,
+    high:155,
+    low:146,
+    close:149
+  },
+  {
+    time:"13:45",
+    open:149,
+    high:153,
+    low:143,
+    close:145
+  },
+  {
+    time:"13:50",
+    open:145,
+    high:150,
+    low:140,
+    close:148
+  },
+  {
+    time:"13:55",
+    open:148,
+    high:155,
+    low:146,
+    close:152
+  },
+
+  {
+    time:"14:00",
+    open:152,
+    high:160,
+    low:150,
+    close:158
+  },
+  {
+    time:"14:05",
+    open:158,
+    high:163,
+    low:154,
+    close:160
+  },
+  {
+    time:"14:10",
+    open:160,
+    high:165,
+    low:157,
+    close:162
+  },
+  {
+    time:"14:15",
+    open:162,
+    high:168,
+    low:159,
+    close:166
+  },
+  {
+    time:"14:20",
+    open:166,
+    high:171,
+    low:162,
+    close:169
+  },
+  {
+    time:"14:25",
+    open:169,
+    high:174,
+    low:164,
+    close:167
+  },
+  {
+    time:"14:30",
+    open:167,
+    high:172,
+    low:160,
+    close:163
+  },
+  {
+    time:"14:35",
+    open:163,
+    high:168,
+    low:158,
+    close:165
+  },
+  {
+    time:"14:40",
+    open:165,
+    high:170,
+    low:161,
+    close:168
+  },
+  {
+    time:"14:45",
+    open:168,
+    high:176,
+    low:166,
+    close:173
+  },
+  {
+    time:"14:50",
+    open:173,
+    high:179,
+    low:170,
+    close:176
+  },
+  {
+    time:"14:55",
+    open:176,
+    high:181,
+    low:172,
+    close:174
+  },
+  {
+    time:"15:00",
+    open:174,
+    high:178,
+    low:169,
+    close:171
+  },
+  {
+    time:"15:05",
+    open:171,
+    high:176,
+    low:167,
+    close:173
+  },
+  {
+    time:"15:10",
+    open:173,
+    high:180,
+    low:171,
+    close:178
+  },
+  {
+    time:"15:15",
+    open:178,
+    high:184,
+    low:175,
+    close:181
+  },
+  {
+    time:"15:20",
+    open:181,
+    high:186,
+    low:177,
+    close:183
+  },
+  {
+    time:"15:25",
+    open:183,
+    high:188,
+    low:179,
+    close:185
+  },
+  {
+    time:"15:30",
+    open:185,
+    high:190,
+    low:182,
+    close:187
+  }
+
+
+]
+
+  return (
+    <div className='text-white h-full w-full'>
+        <TopPart />
+        <div className='min-h-full w-full flex gap-2'>
+          <LeftSidebar/>
+          <Chart data={candles}/>
+          <RightSidebar/>
+        </div>
+    </div>
+  )
+}
+
+export default ChartView
