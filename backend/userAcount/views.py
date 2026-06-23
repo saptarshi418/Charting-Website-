@@ -4,12 +4,16 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.timesince import timesince
 from django.utils.timezone import now
 from rest_framework.decorators import api_view
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.filters import SearchFilter 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from .serializers import *
+import pandas as pd
+import pandas_ta_classic  as ta
+
 
 
 @api_view(["POST"])
@@ -179,8 +183,6 @@ def login_user(request):
     )
 
 
-
-
 class DatasetUploadView(ModelViewSet):
     
     serializer_class = DatasetSerializer
@@ -232,10 +234,81 @@ class DatasetUploadView(ModelViewSet):
     
 class DatasetCandelstickView(ModelViewSet):
     timelist = ["1M", "5M","15M","30M","1H","4H","1D" , "1W","1MO"]
-    
-
 
     permission_classes=[IsAuthenticated]
+    #indecator calculation and return data 
+    @staticmethod
+    def calculate_indecator(df,indicator_name , *args, **kwargs):
+        match indicator_name:
+            case "SMA":
+                settings = kwargs.get("settings", {})
+                period = int(settings.get("period", 20))
+                col_name = settings.get("col", "close")
+                df["SMA"] = ta.sma(df[col_name],length=period)
+                print(df.head())
+                indicator_data = df[["datetime" , "SMA"]]
+                indicator_data = indicator_data.dropna()
+                return  indicator_data
+            case "EMA":
+                settings = kwargs.get("settings", {})
+                period = int(settings.get("period", 20))
+                col_name = settings.get("col", "close")
+                df["EMA"] = ta.ema(df[col_name],length=period)
+                indicator_data = df[["datetime" , "EMA"]]
+                indicator_data = indicator_data.dropna()
+                return  indicator_data
+            case "RSI":
+                settings = kwargs.get("settings", {})
+                rsi_period = int(settings.get("period",14))
+                col_name = settings.get('col', "close")
+
+                df["RSI"] = ta.rsi(
+                    df[col_name],
+                    length=rsi_period
+                )
+
+                smooth = int(settings.get("smooth"))
+
+                if smooth:
+                    if settings.get("smooth_type") == "EMA":
+                        df["RSI_SMOOTH"] = ta.ema(
+                            df["RSI"],
+                            length=smooth
+                        )
+                    else:
+                        df["RSI_SMOOTH"] = ta.sma(
+                            df["RSI"],
+                            length=smooth
+                        )
+                indicator_data = df[["datetime","RSI", "RSI_SMOOTH"]]
+                indicator_data = indicator_data.dropna()
+                return indicator_data
+            case "SUPERTREND":
+                settings = kwargs.get("settings", {})
+                period = int(settings.get("period", 10))
+                multiplier = float(settings.get("multiplier", 3))
+                supertrend = ta.supertrend(
+                        high=df["high"],
+                        low=df["low"],
+                        close=df["close"],
+                        length=period,
+                        multiplier=multiplier
+                    )
+                df = df.join(supertrend)
+                indicator_data = df[
+                    [
+                        "datetime",
+                        f"SUPERT_{period}_{multiplier}",
+                        f"SUPERTd_{period}_{multiplier}"
+                    ]
+                ]
+
+                indicator_data = indicator_data.dropna()
+                return indicator_data
+
+        pass
+
+    # agreegation function
     @staticmethod
     def aggregate_candle(file_path , timeframe):
         TIMEFRAME_MAP = {
@@ -290,8 +363,10 @@ class DatasetCandelstickView(ModelViewSet):
         data_head = df.columns
         data = df[["datetime","open","high","low","close","volume"]].values.tolist()
         request_timeframe = self.request.query_params.get("timeframe")
+        request_indicator = self.request.query_params.get("indicator")
+        
       
-        if request_timeframe is not None:
+        if request_timeframe is not None:    # handles te timeframe aggregation
             if request_timeframe not in TIMEFRAME_ORDER:
                 return Response(
                     {
@@ -299,7 +374,7 @@ class DatasetCandelstickView(ModelViewSet):
                     },
                     status=400
                 )
-            if TIMEFRAME_ORDER[timeframe]  > TIMEFRAME_ORDER[request_timeframe]:
+            if TIMEFRAME_ORDER[timeframe]  > TIMEFRAME_ORDER[request_timeframe]:       #checks if req timeframe gretter than data time frame
                 return Response({
                     "error" : "valueError",
                     "massage":f"cannot convert {timeframe} into {request_timeframe}"
@@ -307,13 +382,40 @@ class DatasetCandelstickView(ModelViewSet):
             data = self.aggregate_candle(file_path,request_timeframe)
             data_head = df.columns
             data = data.values.tolist()
-            
-  
 
+        if request_indicator is not None:
+            dataset = Dataset.objects.get(id = pk , user = request.user)
+            file_path = dataset.file.path
+            candle_data = pd.read_parquet(file_path)
+            agg_time_frame = self.request.query_params.get("timeframe")
+            indicator_value = int(self.request.query_params.get("period"))
+            if agg_time_frame is not None:
+                candle_data = self.aggregate_candle(file_path,agg_time_frame)
+            
+            settings = {
+                key: value
+                for key, value in self.request.query_params.items()
+                if key not in ["indicator", "timeframe"]
+            }
+
+
+            indicator_data = self.calculate_indecator(candle_data,request_indicator , settings=settings)
+            indicator_data_title = indicator_data.columns.tolist()
+            indicator_data = indicator_data.values.tolist()
+
+
+
+            return Response ({"columns":indicator_data_title , "values":indicator_data})
+
+         
+        
         return Response({
             "data_title":data_head,
             "data": data
         })
+    
+
+
 
 
                 
