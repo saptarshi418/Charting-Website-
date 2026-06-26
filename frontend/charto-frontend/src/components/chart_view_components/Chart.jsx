@@ -1,150 +1,221 @@
-import React from 'react';
+import React from "react";
 import ReactECharts from "echarts-for-react";
 
-const Chart = ({data, data_title}) => {
-  // Guard clause in case data is empty or loading
-  if (!data || data.length === 0) return <div>No data available</div>;
+const Chart = React.memo(({ data, data_title, indecatorData }) => {
 
-  console.log(data);
-  // console.log(data_title);
-  
-  
-  const option = {
-    backgroundColor: "#0A0C0F",
+    if (!data || data.length === 0)
+        return <div>No data available</div>;
 
-    tooltip: {
-      trigger: "axis",
-      axisPointer: {
-        type: "cross"
-      },
-      // Beautiful dark-themed financial layout
-      backgroundColor: 'rgba(20, 24, 33, 0.95)',
-      borderColor: '#334155',
-      borderWidth: 1,
-      textStyle: {
-        color: '#E2E8F0'
-      },
-      confine: true,
+    const indicatorConfig = {
+        EMA: { chart_type: "overlay", series_type: "line" },
+        SMA: { chart_type: "overlay", series_type: "line" },
+        SUPERTREND: { chart_type: "overlay", series_type: "line" },
+        RSI: { chart_type: "oscillator", series_type: "line" }
+    };
 
-      formatter: function (params) {
-        const item = params[0];
-        // console.log(params);
-        
-        // item.value contains: [index, open, close, low, high]
-          const open = item.value[1];
-          const close = item.value[2];
-          const low = item.value[3];
-          const high = item.value[4];
-    
-        
-        // Match your custom green/red conditional color scheme
-        const isBullish = close >= open;
-        const colorHtml = isBullish ? '#00d4a8' : '#ff4d4f';
-        const sign = isBullish ? '+' : '';
-        const change = close - open;
-        const pctChange = ((change / close) * 100).toFixed(2);
+    const overlayIndicators = [];
+    const oscillatorPanels = [];
 
-        return `
-          <div class="font-mono text-[13px] p-1">
-          <div class="font-bold mb-1.5 text-slate-400">
-            ${item.name}
-          </div>
+    indecatorData?.forEach(indicator => {
+        const config = indicatorConfig[indicator.indicator_name];
+        if (!config) return;
 
-          <div 
-            class="font-bold mb-1.5"
-            style="color: ${colorHtml};"
-          >
-            Close: ${close} (${sign}${pctChange}%)
-          </div>
-
-          <div class="grid grid-cols-2 gap-x-3 text-slate-400">
-            <span>Open:</span>
-            <span class="text-slate-100 text-right">${open}</span>
-
-            <span>High:</span>
-            <span class="text-slate-100 text-right">${high}</span>
-
-            <span>Low:</span>
-            <span class="text-slate-100 text-right">${low}</span>
-          </div>
-        </div>
-        `;
-      }
-    },
-
-    xAxis: {
-      type: "category",
-      data: data.map(item => item[0]),
-      axisLine: {
-        lineStyle: {
-          color: '#334155', // Changed from black to subtle slate grey
-          width: 1,
+        // overlay indicators
+        if (config.chart_type === "overlay") {
+            overlayIndicators.push({
+                name: indicator.indicator_name,
+                type: "line",
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+                color: indicator.color || "#ffffff",
+                data: indicator.values.map(v => [v[0], v[1]]),
+                smooth: true,
+                showSymbol: false
+            });
+            return;
         }
-      },
-      axisLabel: {
-        color: '#9f4A3B8' // Ensures the date labels are visible on dark mode
-      },
-      splitLine: {
-        show: false
-      }
-    },
 
-    yAxis: {
-      scale: true,
-      axisLabel: {
-        color: '#94A3B8' 
-      },
-      splitLine: {
-        show: true,
-        lineStyle: {
-          color: '#334155', 
-          opacity: 0.3,
-          width: 2,
-          type: 'dashed'
+        // oscillator indicators
+        if (config.chart_type === "oscillator") {
+            const panelIndex = oscillatorPanels.length + 1;
+            const series = [];
+
+            // main value
+            series.push({
+                name: indicator.indicator_name,
+                type: "line",
+                xAxisIndex: panelIndex,
+                yAxisIndex: panelIndex,
+                color: indicator.color || "#ffffff",
+                data: indicator.values.map(v => [v[0], v[1]]),
+                smooth: false,
+                showSymbol: false
+            });
+
+            // RSI smooth line
+            if (indicator.indicator_name === "RSI") {
+                series.push({
+                    name: "RSI Smooth",
+                    type: "line",
+                    xAxisIndex: panelIndex,
+                    yAxisIndex: panelIndex,
+                    color: indicator.color || "#ffffff",
+                    opacity: 0.5,
+                    data: indicator.values.map(v => [v[0], v[2]]),
+                    smooth: true,
+                    showSymbol: false
+                });
+            }
+
+            oscillatorPanels.push({
+                index: panelIndex,
+                series
+            });
         }
-      }
-    },
+    });
 
-    dataZoom: [
-      {
-        type: "inside",
-        startValue: Math.max(data.length - 40, 0),
-        endValue: data.length - 1
-      },
-    ],
+    const oscillatorCount = oscillatorPanels.length;
 
-    series: [
-      {
-        name: "Price",
-        type: "candlestick",
-        data: data.map(item => [
-          item[1], // open
-          item[4], // close
-          item[3], // low
-          item[2]  // high
-        ]),
-        itemStyle: {
-          color: "#00d4a8",
-          color0: "#ff4d4f",
-          borderColor: "#00d4a8",
-          borderColor0: "#ff4d4f"
+    const candleHeight =
+        oscillatorCount === 0
+            ? 85
+            : Math.max(45 - oscillatorCount * 5, 20);
+
+    const oscillatorHeight = 12;
+
+    const grids = [
+        {
+            left: "8%",
+            right: "5%",
+            top: "5%",
+            height: `${candleHeight}%`
         }
-      }
-    ]
-  };
+    ];
 
-  return (
-    <ReactECharts
-      option={option}
-      onEvents={(e)=>{
-         e.event.preventDefault();
-      }}
-      style={{
-        height: "500px",        
-        width: "100%"
-      }}
-    />
-  );
-};
+    oscillatorPanels.forEach((panel, index) => {
+        grids.push({
+            left: "8%",
+            right: "5%",
+            top: `${candleHeight + 10 + index * (oscillatorHeight + 4)}%`,
+            height: `${oscillatorHeight}%`
+        });
+    });
+
+    const xAxis = [
+        {
+            type: "category",
+            data: data.map(x => x[0]),
+            gridIndex: 0,
+            axisLine: {
+                lineStyle: { color: "#334155" }
+            },
+            splitLine: { show: false }
+        }
+    ];
+
+    const yAxis = [
+        {
+            scale: true,
+            gridIndex: 0,
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: "#334155",
+                    opacity: 0.3,
+                    type: "dashed"
+                }
+            }
+        }
+    ];
+
+    oscillatorPanels.forEach((panel, index) => {
+        const idx = index + 1;
+
+        xAxis.push({
+            type: "category",
+            data: data.map(x => x[0]),
+            gridIndex: idx,
+            axisLabel: { show: false },
+            axisLine: {
+                lineStyle: { color: "#334155" }
+            }
+        });
+
+        yAxis.push({
+            gridIndex: idx,
+            min: 0,
+            max: 100,
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: "#334155",
+                    opacity: 0.3,
+                    type: "dashed"
+                }
+            },
+            axisLabel: {
+                formatter: (value) => {
+                    if (value === 70) return "70";
+                    if (value === 30) return "30";
+                    return "";
+                }
+            }
+        });
+    });
+
+    const option = {
+        backgroundColor: "#0A0C0F",
+        tooltip: {
+            trigger: "axis",
+            axisPointer: {
+                type: "cross",
+                crossStyle: { color: "#aaa" }
+            },
+            backgroundColor: "rgba(20,24,33,.95)",
+            confine: true
+        },
+        grid: grids,
+        xAxis,
+        yAxis,
+        dataZoom: [
+            {
+                type: "inside",
+                xAxisIndex: xAxis.map((_, i) => i),
+                startValue: Math.max(data.length - 80, 0),
+                endValue: data.length - 1
+            }
+        ],
+        series: [
+            {
+                name: "Price",
+                type: "candlestick",
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+                data: data.map(item => [item[1], item[4], item[3], item[2]]),
+                itemStyle: {
+                    color: "#00d4a8",
+                    color0: "#ff4d4f",
+                    borderColor: "#00d4a8",
+                    borderColor0: "#ff4d4f"
+                }
+            },
+            ...overlayIndicators,
+            ...oscillatorPanels.flatMap(panel => panel.series)
+        ]
+    };
+
+    return (
+        <ReactECharts
+            key={oscillatorCount}
+            option={option}
+            notMerge={true}        
+            lazyUpdate={false} 
+            style={{
+                height: `${700 + oscillatorCount * 120}px`,
+                width: "100%"
+            }}
+        />
+    );
+});
 
 export default Chart;

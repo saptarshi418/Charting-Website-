@@ -285,25 +285,31 @@ class DatasetCandelstickView(ModelViewSet):
                 return indicator_data
             case "SUPERTREND":
                 settings = kwargs.get("settings", {})
+
                 period = int(settings.get("period", 10))
-                multiplier = float(settings.get("multiplier", 3))
+                multiplier = int(settings.get("multiplier", 3))
+
                 supertrend = ta.supertrend(
-                        high=df["high"],
-                        low=df["low"],
-                        close=df["close"],
-                        length=period,
-                        multiplier=multiplier
-                    )
+                    high=df["high"],
+                    low=df["low"],
+                    close=df["close"],
+                    length=period,
+                    multiplier=multiplier
+                )
+                # print(supertrend.columns)
+
                 df = df.join(supertrend)
+
                 indicator_data = df[
                     [
                         "datetime",
-                        f"SUPERT_{period}_{multiplier}",
-                        f"SUPERTd_{period}_{multiplier}"
+                        f"SUPERT_{period}_{float(multiplier)}",
+                        f"SUPERTd_{period}_{float(multiplier)}"
                     ]
                 ]
 
                 indicator_data = indicator_data.dropna()
+
                 return indicator_data
 
         pass
@@ -402,9 +408,7 @@ class DatasetCandelstickView(ModelViewSet):
             indicator_data = self.calculate_indecator(candle_data,request_indicator , settings=settings)
             indicator_data_title = indicator_data.columns.tolist()
             indicator_data = indicator_data.values.tolist()
-
-
-
+           
             return Response ({"columns":indicator_data_title , "values":indicator_data})
 
          
